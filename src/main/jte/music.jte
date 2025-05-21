@@ -24,13 +24,8 @@
             !{var seconds = duration % 60;}
             <p>Тривалість: ${minutes} хв ${seconds} сек</p>
             <p>Кількість лайків: ${music.getLikes()}</p>
-
             <hr/>
-
         </div>
     @endfor
-
-
-
 </body>
 </html>
