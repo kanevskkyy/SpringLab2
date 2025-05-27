@@ -1,4 +1,4 @@
-package org.example.sportify.data;
+package org.example.sportify.data.entites;
 
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
@@ -6,13 +6,13 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "author")
+@Table(name = "genre")
 @Getter
 @Setter
 @EqualsAndHashCode
-public class Author {
+public class Genre {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "name")

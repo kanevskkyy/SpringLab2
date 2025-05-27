@@ -1,5 +1,5 @@
-package org.example.sportify.presentation.login;
-import org.example.sportify.data.MusicRepository;
+package org.example.sportify.presentation;
+import org.example.sportify.data.repository.MusicRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class RoleController {
     private final MusicRepository musicRepository;
-
     public RoleController(MusicRepository musicRepository) {
         this.musicRepository = musicRepository;
     }
@@ -23,14 +22,6 @@ public class RoleController {
         model.addAttribute("musicCount", musicCount);
         model.addAttribute("musics", musics);
         return "music-page";
-    }
-
-    @GetMapping("/admin/dashboard")
-    public String adminDashboard(Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("username", auth.getName());
-        model.addAttribute("roles", auth.getAuthorities());
-        return "admin-dashboard";
     }
 
     @GetMapping("/")

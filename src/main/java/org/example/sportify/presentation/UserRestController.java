@@ -1,6 +1,6 @@
 package org.example.sportify.presentation;
 
-import org.example.sportify.data.User;
+import org.example.sportify.data.entites.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;

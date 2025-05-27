@@ -1,6 +1,6 @@
 package org.example.sportify.presentation.login;
 
-import org.example.sportify.data.User;
+import org.example.sportify.data.entites.User;
 import org.example.sportify.presentation.UserRegisterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,7 +14,6 @@ import java.util.List;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
-
     private final UserRegisterRepository userRepository;
 
     @Autowired

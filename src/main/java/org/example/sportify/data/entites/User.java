@@ -1,4 +1,4 @@
-package org.example.sportify.data;
+package org.example.sportify.data.entites;
 
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
