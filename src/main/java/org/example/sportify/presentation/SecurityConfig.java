@@ -1,5 +1,4 @@
 package org.example.sportify.presentation;
-
 import org.example.sportify.presentation.login.AuthenticationSuccessHandler;
 import org.example.sportify.presentation.login.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -105,12 +105,6 @@
         <li>
             <a href="/admin/musics">🎼 Керування музикою</a>
         </li>
-        <li>
-            <a href="/admin/genres">🎸 Керування жанрами</a>
-        </li>
-        <li>
-            <a href="/admin/authors">👥 Керування авторами</a>
-        </li>
     </ul>
 </div>
 </body>

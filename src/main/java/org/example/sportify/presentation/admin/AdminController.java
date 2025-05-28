@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import java.util.ArrayList;
 
 @Controller
 @RequestMapping("/admin")
@@ -19,7 +20,7 @@ public class AdminController {
     private final GenreRepository genreRepository;
     private final AuthorRepository authorRepository;
 
-    public AdminController(MusicRepository musicRepository,GenreRepository genreRepository,AuthorRepository authorRepository) {
+    public AdminController(MusicRepository musicRepository, GenreRepository genreRepository, AuthorRepository authorRepository) {
         this.musicRepository = musicRepository;
         this.genreRepository = genreRepository;
         this.authorRepository = authorRepository;
@@ -43,31 +44,15 @@ public class AdminController {
         model.addAttribute("username", auth.getName());
 
         var musics = musicRepository.findAll();
-        model.addAttribute("musics", musics);
+        var authors = authorRepository.findAll();
+        var genres = genreRepository.findAll();
+
+        // Add null safety checks
+        model.addAttribute("music", musics != null ? musics : new ArrayList<>());
+        model.addAttribute("authors", authors != null ? authors : new ArrayList<>());
+        model.addAttribute("genres", genres != null ? genres : new ArrayList<>());
         model.addAttribute("musicCount", musicRepository.count());
 
         return "admin/manage-music";
-    }
-
-    @GetMapping("/genres")
-    public String manageGenres(Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("username", auth.getName());
-
-        var genres = genreRepository.findAll();
-        model.addAttribute("genres", genres);
-        model.addAttribute("genreCount", genreRepository.count());
-        return "admin/manage-genres";
-    }
-
-    @GetMapping("/authors")
-    public String manageAuthors(Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("username", auth.getName());
-
-        var authors = authorRepository.findAll();
-        model.addAttribute("authors", authors);
-        model.addAttribute("authorCount", authorRepository.count());
-        return "admin/manage-authors";
     }
 }
