@@ -27,6 +27,87 @@
             margin-bottom: 20px;
         }
 
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .search-group {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .search-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .sort-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sort-group label {
+            font-weight: bold;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .sort-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .sort-btn {
+            padding: 8px 12px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            color: #007bff;
+            min-width: 100px;
+        }
+
+        .sort-btn:hover {
+            background: #007bff;
+            color: white;
+        }
+
+        .sort-btn.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .results-info {
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+
         .btn {
             padding: 8px 16px;
             border: none;
@@ -66,10 +147,23 @@
             margin: 10px 0;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .music-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
 
         .music-actions {
             margin-top: 10px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
         }
 
         /* Modal styles */
@@ -144,6 +238,22 @@
             border-radius: 4px;
             margin: 10px 0;
         }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-group {
+                min-width: auto;
+            }
+
+            .sort-group {
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+        }
     </style>
 </head>
 <body>
@@ -155,9 +265,39 @@
 <div id="error-message"></div>
 <div id="success-message"></div>
 
+<!-- Контролі пошуку та сортування -->
+<div class="controls">
+    <div class="search-group">
+        <label for="searchInput">Пошук по назві пісні:</label>
+        <input type="text" id="searchInput" placeholder="Введіть назву пісні..." onkeyup="filterMusic()">
+    </div>
+
+    <div class="sort-group">
+        <label>Сортувати за:</label>
+        <select id="sortSelect" class="sort-select" onchange="sortMusic()">
+            <option value="title-asc">Назва (А-Я)</option>
+            <option value="title-desc">Назва (Я-А)</option>
+            <option value="author-asc">Виконавець (А-Я)</option>
+            <option value="author-desc">Виконавець (Я-А)</option>
+            <option value="genre-asc">Жанр (А-Я)</option>
+            <option value="genre-desc">Жанр (Я-А)</option>
+            <option value="likes-asc">Лайки (менше)</option>
+            <option value="likes-desc">Лайки (більше)</option>
+        </select>
+    </div>
+</div>
+
+<div class="results-info">
+    <span id="resultsCount">Показано: ${music.size()} пісень</span>
+</div>
+
 <div id="music-list">
     @for(Music mus : music)
-        <div class="music-item">
+        <div class="music-item"
+             data-title="${mus.getTitle().toLowerCase()}"
+             data-author="@if(mus.getAuthor() != null)${mus.getAuthor().getName().toLowerCase()}@else невідомо@endif"
+             data-genre="@if(mus.getGenre() != null)${mus.getGenre().getName().toLowerCase()}@else невідомо@endif"
+             data-likes="@if(mus.getLikes() != null)${mus.getLikes()}@else 0@endif">
             <p><strong>Назва пісні:</strong> ${mus.getTitle()}</p>
             <p><strong>Жанр:</strong> @if(mus.getGenre() != null)${mus.getGenre().getName()}@else Невідомо@endif 🎵</p>
             <p><strong>Виконавець:</strong> @if(mus.getAuthor() != null)${mus.getAuthor().getName()}@else Невідомо@endif</p>
@@ -184,8 +324,14 @@
     @endfor
 
     @if(music.isEmpty())
-        <p>Немає доданої музики</p>
+        <div class="no-results">
+            <p>Немає доданої музики</p>
+        </div>
     @endif
+</div>
+
+<div id="no-search-results" class="no-results" style="display: none;">
+    <p>За вашим запитом нічого не знайдено</p>
 </div>
 
 <!-- Create/Edit Modal -->
@@ -258,7 +404,136 @@
 <script>
     var currentDeleteId = null;
     var apiBase = '/api/music';
+    var allMusicItems = [];
+    var filteredItems = [];
 
+    // Ініціалізація при завантаженні сторінки
+    document.addEventListener('DOMContentLoaded', function() {
+        allMusicItems = Array.from(document.querySelectorAll('.music-item'));
+        filteredItems = [...allMusicItems];
+        updateResultsCount();
+    });
+
+    // Функція пошуку
+    function filterMusic() {
+        var searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+        var noResultsDiv = document.getElementById('no-search-results');
+
+        if (searchTerm === '') {
+            // Показати всі елементи
+            filteredItems = [...allMusicItems];
+            allMusicItems.forEach(function(item) {
+                item.style.display = 'block';
+            });
+            noResultsDiv.style.display = 'none';
+        } else {
+            // Фільтрувати по назві пісні
+            filteredItems = allMusicItems.filter(function(item) {
+                var title = item.getAttribute('data-title');
+                return title.includes(searchTerm);
+            });
+
+            allMusicItems.forEach(function(item) {
+                var title = item.getAttribute('data-title');
+                if (title.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Показати повідомлення про відсутність результатів
+            if (filteredItems.length === 0) {
+                noResultsDiv.style.display = 'block';
+            } else {
+                noResultsDiv.style.display = 'none';
+            }
+        }
+
+        updateResultsCount();
+
+        // Перезастосувати сортування до відфільтрованих елементів
+        var currentSort = document.getElementById('sortSelect').value;
+        applySorting(currentSort);
+    }
+
+    // Функція сортування
+    function sortMusic() {
+        var sortValue = document.getElementById('sortSelect').value;
+        applySorting(sortValue);
+    }
+
+    function applySorting(sortValue) {
+        var musicList = document.getElementById('music-list');
+        var visibleItems = filteredItems.filter(function(item) {
+            return item.style.display !== 'none';
+        });
+
+        // Сортування видимих елементів
+        visibleItems.sort(function(a, b) {
+            var aValue, bValue;
+
+            switch(sortValue) {
+                case 'title-asc':
+                    aValue = a.getAttribute('data-title');
+                    bValue = b.getAttribute('data-title');
+                    return aValue.localeCompare(bValue, 'uk');
+
+                case 'title-desc':
+                    aValue = a.getAttribute('data-title');
+                    bValue = b.getAttribute('data-title');
+                    return bValue.localeCompare(aValue, 'uk');
+
+                case 'author-asc':
+                    aValue = a.getAttribute('data-author');
+                    bValue = b.getAttribute('data-author');
+                    return aValue.localeCompare(bValue, 'uk');
+
+                case 'author-desc':
+                    aValue = a.getAttribute('data-author');
+                    bValue = b.getAttribute('data-author');
+                    return bValue.localeCompare(aValue, 'uk');
+
+                case 'genre-asc':
+                    aValue = a.getAttribute('data-genre');
+                    bValue = b.getAttribute('data-genre');
+                    return aValue.localeCompare(bValue, 'uk');
+
+                case 'genre-desc':
+                    aValue = a.getAttribute('data-genre');
+                    bValue = b.getAttribute('data-genre');
+                    return bValue.localeCompare(aValue, 'uk');
+
+                case 'likes-asc':
+                    aValue = parseInt(a.getAttribute('data-likes')) || 0;
+                    bValue = parseInt(b.getAttribute('data-likes')) || 0;
+                    return aValue - bValue;
+
+                case 'likes-desc':
+                    aValue = parseInt(a.getAttribute('data-likes')) || 0;
+                    bValue = parseInt(b.getAttribute('data-likes')) || 0;
+                    return bValue - aValue;
+
+                default:
+                    return 0;
+            }
+        });
+
+        // Перевставити відсортовані елементи
+        visibleItems.forEach(function(item) {
+            musicList.appendChild(item);
+        });
+    }
+
+    function updateResultsCount() {
+        var count = filteredItems.filter(function(item) {
+            return item.style.display !== 'none';
+        }).length;
+
+        document.getElementById('resultsCount').textContent = 'Показано: ' + count + ' пісень';
+    }
+
+    // Оригінальні функції модальних вікон
     function openCreateModal() {
         document.getElementById('modal-title').textContent = 'Додати нову пісню';
         document.getElementById('musicForm').reset();
